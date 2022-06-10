@@ -49,13 +49,13 @@ namespace GeoSkylines
 
         public void LoadConfiguration()
         {
-            if (!File.Exists("Files/import_export.conf"))
+            if (!File.Exists("Files/import_export.txt"))
             {
                 panel.SetMessage("GeoSkylines", "No configuration file provided!", false);
                 confloaded = false;
             }
 
-            StreamReader confSr = File.OpenText("Files/import_export.conf");
+            StreamReader confSr = File.OpenText("Files/import_export.txt");
             Dictionary<string, string> conf = new Dictionary<string, string>();
             while (!confSr.EndOfStream)
             {
@@ -584,13 +584,13 @@ namespace GeoSkylines
             ExceptionPanel panel = UIView.library.ShowModal<ExceptionPanel>("ExceptionPanel");
             string msg = "";
 
-            if (!File.Exists("Files/import_export.conf"))
+            if (!File.Exists("Files/import_export.txt"))
             {
                 panel.SetMessage("Jan's mod", "no conf file provided!", false);
                 return;
             }
 
-            StreamReader confSr = File.OpenText("Files/import_export.conf");
+            StreamReader confSr = File.OpenText("Files/import_export.txt");
             Dictionary<string, string> conf = new Dictionary<string, string>();
             while (!confSr.EndOfStream)
             {
@@ -806,7 +806,7 @@ namespace GeoSkylines
         static public void DisplayLLOnMouseClick()
         {
             ExceptionPanel panel = UIView.library.ShowModal<ExceptionPanel>("ExceptionPanel");
-            if (!File.Exists("Files/import_export.conf"))
+            if (!File.Exists("Files/import_export.txt"))
             {
                 panel.SetMessage("GeoSkylines", "no conf file provided!", false);
                 return;
@@ -817,7 +817,7 @@ namespace GeoSkylines
             Ray mouseRay = Camera.main.ScreenPointToRay(screenMousePos);
             var mousePos = GeoSkylinesTool.RaycastMouseLocation(mouseRay);            
 
-            StreamReader confSr = File.OpenText("Files/import_export.conf");
+            StreamReader confSr = File.OpenText("Files/import_export.txt");
             Dictionary<string, string> conf = new Dictionary<string, string>();
             while (!confSr.EndOfStream)
             {
