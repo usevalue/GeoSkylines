@@ -23,8 +23,8 @@ namespace GeoSkylines
         private Dictionary<short, List<GeoSkylinesNode>> nodeMap = new Dictionary<short, List<GeoSkylinesNode>>();
         private Dictionary<string, List<uint>> zoneBlockMap = new Dictionary<string, List<uint>>();        
 
-        private BuildingManager bm = BuildingManager.instance;
-        private NetManager nm = NetManager.instance;        
+        private BuildingManager buildingManager = BuildingManager.instance;
+        private NetManager netManager = NetManager.instance;        
         private TerrainManager tm = TerrainManager.instance;
         private SimulationManager sm = SimulationManager.instance;
         private TreeInfo ti;
@@ -35,7 +35,7 @@ namespace GeoSkylines
         private string impRailsFileName = "rails_rwo.csv";
         private string railMappingFileName = "rwo_cs_rail_match.csv";
         private string impBuildingsFileName = "buildings_rwo.csv";
-        private string buildingMatchFileName = "rwo_cs_building_match.csv";
+        /private string buildingMatchFileName = "rwo_cs_building_match.csv";
         private string impZonesFileName = "zones_rwo.csv";
         private string zoneMappingFileName = "rwo_cs_zone_match.csv";
         private string impTreesRasterFileName = "trees.png";
@@ -444,7 +444,6 @@ namespace GeoSkylines
         public bool ObtainNetInfo(out NetInfo ni, Dictionary<string, string> mapping, string netType, bool bridge, string oneWay, int lanes)
         {                            
             ni = PrefabCollection<NetInfo>.FindLoaded("Basic Road");
-
             string rt = netType;
             if (oneWay == "yes")
                 rt += "_oneway";
@@ -487,8 +486,8 @@ namespace GeoSkylines
                 ObtainCSNode(out ushort startNetNodeId, nodes[0], road.netInfo);
                 ObtainCSNode(out ushort endNetNodeId, nodes[1], road.netInfo);
 
-                Vector3 endPos = nm.m_nodes.m_buffer[endNetNodeId].m_position;
-                Vector3 startPos = nm.m_nodes.m_buffer[startNetNodeId].m_position;
+                Vector3 endPos = netManager.m_nodes.m_buffer[endNetNodeId].m_position;
+                Vector3 startPos = netManager.m_nodes.m_buffer[startNetNodeId].m_position;
                 Vector3 startDir = VectorUtils.NormalizeXZ(endPos - startPos);
                 Vector3 endDir = -startDir;
 
@@ -507,8 +506,8 @@ namespace GeoSkylines
                     ObtainCSNode(out ushort startNetNodeId, curve.p0, road.netInfo);
                     ObtainCSNode(out ushort endNetNodeId, curve.p3, road.netInfo);
 
-                    Vector3 endPos = nm.m_nodes.m_buffer[endNetNodeId].m_position;
-                    Vector3 startPos = nm.m_nodes.m_buffer[startNetNodeId].m_position;
+                    Vector3 endPos = netManager.m_nodes.m_buffer[endNetNodeId].m_position;
+                    Vector3 startPos = netManager.m_nodes.m_buffer[startNetNodeId].m_position;
 
                     var controlA = new Vector3(curve.p1.x, 0, curve.p1.y);
                     controlA.y = tm.SampleRawHeightSmoothWithWater(controlA, false, 0f);
@@ -537,7 +536,7 @@ namespace GeoSkylines
                     var nodePos = new Vector3(inNode.position.x, 0, inNode.position.y); 
                     nodePos.y = tm.SampleRawHeightSmoothWithWater(nodePos, false, 0f);
 
-                    if (nm.CreateNode(out netNodeId, ref rand, ni, nodePos, sm.m_currentBuildIndex))
+                    if (netManager.CreateNode(out netNodeId, ref rand, ni, nodePos, sm.m_currentBuildIndex))
                     {
                         sm.m_currentBuildIndex += 1u;
                     }
@@ -664,7 +663,7 @@ namespace GeoSkylines
 
             Debug.Log(DateTime.Now.ToString("h:mm:ss tt"));
 
-            NetSegment[] segments = nm.m_segments.m_buffer;
+            NetSegment[] segments = netManager.m_segments.m_buffer;
             
             for (int i = 0; i < segments.Length; i++)
             {
@@ -678,7 +677,7 @@ namespace GeoSkylines
                 //var endN = nm.m_nodes.m_buffer[a_seg.m_endNode].m_position;
                 //Vector2 endPos = new Vector2(endN.x, endN.z);
 
-                var segName = nm.GetSegmentName((ushort)i);
+                var segName = netManager.GetSegmentName((ushort)i);
 
                 var midV3 = a_seg.m_middlePosition;
                 Vector2 midV2 = new Vector2(midV3.x, midV3.z);
@@ -709,7 +708,7 @@ namespace GeoSkylines
                 msg += "Old name: " + segName + " New name: " + street_name + "\n";
                 Debug.Log(msg);
 
-                nm.SetSegmentNameImpl((ushort)i, street_name);
+                netManager.SetSegmentNameImpl((ushort)i, street_name);
             }
 
             Debug.Log(DateTime.Now.ToString("h:mm:ss tt"));
@@ -718,7 +717,7 @@ namespace GeoSkylines
 
         public void DebugRoad()
         {
-            NetSegment[] segments = nm.m_segments.m_buffer;
+            NetSegment[] segments = netManager.m_segments.m_buffer;
             string msg = "";
             for (int i = 0; i < segments.Length; i++)
             {
@@ -728,11 +727,11 @@ namespace GeoSkylines
                 if (a_seg.m_startNode == 0 || a_seg.m_endNode == 0)
                     continue;
 
-                var segName = nm.GetSegmentName((ushort)i);
+                var segName = netManager.GetSegmentName((ushort)i);
                 //if (segName == "test")
                 //{
-                var startN = nm.m_nodes.m_buffer[a_seg.m_startNode].m_position;
-                var endN = nm.m_nodes.m_buffer[a_seg.m_endNode].m_position;
+                var startN = netManager.m_nodes.m_buffer[a_seg.m_startNode].m_position;
+                var endN = netManager.m_nodes.m_buffer[a_seg.m_endNode].m_position;
                 //var startD = a_seg.m_startDirection;
                 //var endD = a_seg.m_endDirection;
                 //var angle = Vector3.Angle(startD, -endD);
@@ -907,15 +906,15 @@ namespace GeoSkylines
 
         public void RemoveDisconnectedSegments()
         {
-            for (ushort i = 0; i < nm.m_segments.m_buffer.Length; i++)
+            for (ushort i = 0; i < netManager.m_segments.m_buffer.Length; i++)
             {
-                var seg = nm.m_segments.m_buffer[i];
+                var seg = netManager.m_segments.m_buffer[i];
                 if (seg.m_startNode == 0 || seg.m_endNode == 0)
                     continue;
-                var startNode = nm.m_nodes.m_buffer[seg.m_startNode];
-                var endNode = nm.m_nodes.m_buffer[seg.m_endNode];
+                var startNode = netManager.m_nodes.m_buffer[seg.m_startNode];
+                var endNode = netManager.m_nodes.m_buffer[seg.m_endNode];
                 if (startNode.CountSegments() == 1 && endNode.CountSegments() == 1)            
-                    nm.ReleaseSegment(i, false);                                    
+                    netManager.ReleaseSegment(i, false);                                    
             }
         }
 
@@ -923,15 +922,15 @@ namespace GeoSkylines
         {
             int cntDisconnectedSegs = 0;
             int cntAllSegs = 0;
-            for (ushort i = 0; i < nm.m_segments.m_buffer.Length; i++)
+            for (ushort i = 0; i < netManager.m_segments.m_buffer.Length; i++)
             {
                 string msg = "";
-                var seg = nm.m_segments.m_buffer[i];
+                var seg = netManager.m_segments.m_buffer[i];
                 if (seg.m_startNode == 0 || seg.m_endNode == 0)
                     continue;
                 cntAllSegs++;
-                var startNode = nm.m_nodes.m_buffer[seg.m_startNode];
-                var endNode = nm.m_nodes.m_buffer[seg.m_endNode];
+                var startNode = netManager.m_nodes.m_buffer[seg.m_startNode];
+                var endNode = netManager.m_nodes.m_buffer[seg.m_endNode];
                 if (startNode.CountSegments() == 1 && endNode.CountSegments() == 1)
                 {
                     cntDisconnectedSegs++;
@@ -954,12 +953,12 @@ namespace GeoSkylines
 
         public void UpdateSegments()
         {
-            for (ushort i = 0; i < nm.m_segments.m_buffer.Length; i++)
+            for (ushort i = 0; i < netManager.m_segments.m_buffer.Length; i++)
             {
-                var seg = nm.m_segments.m_buffer[i];
+                var seg = netManager.m_segments.m_buffer[i];
                 if (seg.m_startNode == 0 || seg.m_endNode == 0)
                     continue;
-                nm.UpdateSegment(i);
+                netManager.UpdateSegment(i);
             }
         }
 
@@ -967,9 +966,9 @@ namespace GeoSkylines
         {
             List<ushort> doneNodes = new List<ushort>();
             Debug.Log("flags.TrafficLights: " + NetNode.Flags.TrafficLights + " flags.None: " + NetNode.Flags.None);
-            for (ushort i = 0; i < nm.m_segments.m_buffer.Length; i++)
+            for (ushort i = 0; i < netManager.m_segments.m_buffer.Length; i++)
             {
-                var seg = nm.m_segments.m_buffer[i];
+                var seg = netManager.m_segments.m_buffer[i];
                 if (seg.m_startNode == 0 || seg.m_endNode == 0)
                     continue;
 
@@ -982,9 +981,9 @@ namespace GeoSkylines
                     if (!doneNodes.Contains(seg.m_startNode))
                     {
                         //if ((nm.m_nodes.m_buffer[nodeId].m_flags & NetNode.Flags.Junction) != NetNode.Flags.None)
-                        if (nm.m_nodes.m_buffer[nodeId].CountSegments() > 2)
+                        if (netManager.m_nodes.m_buffer[nodeId].CountSegments() > 2)
                         {
-                            nm.m_nodes.m_buffer[nodeId].m_flags |= NetNode.Flags.TrafficLights;
+                            netManager.m_nodes.m_buffer[nodeId].m_flags |= NetNode.Flags.TrafficLights;
                         }
 
                     }
@@ -1295,14 +1294,11 @@ namespace GeoSkylines
                 return;
             }
 
-            string msg = "";
-
             StreamReader sr = File.OpenText("Files/"+ impWaterWayFileName);
 
             string[] field_names = CSVParser.Split(sr.ReadLine());
             string[] fields;            
-            
-            float tmpY;            
+
             while (!sr.EndOfStream)
             {
                 fields = CSVParser.Split(sr.ReadLine());
@@ -1437,8 +1433,6 @@ namespace GeoSkylines
                 panel.SetMessage("GeoSkylines", impWaterFileName+" file doesn't exist!", false);
                 return;
             }
-
-            string msg = "";
 
             StreamReader sr = File.OpenText("Files/"+ impWaterFileName);
 
@@ -1795,8 +1789,6 @@ namespace GeoSkylines
 
             sr.Close();
 
-            BuildingInfo bi;
-
             foreach (var bld in buildings)
             {
                 Vector3 bldPos = new Vector3(bld.bldCentroid[0], 0, bld.bldCentroid[1]);
@@ -2078,15 +2070,14 @@ namespace GeoSkylines
 
         private IEnumerator AddRoad(Randomizer rand, NetInfo ni, ushort startNode, ushort endNode, Vector3 startDirection, Vector3 endDirection, string street_name)
         {
-            ushort segmentId;
-            NetManager net_manager = NetManager.instance;            
+            ushort segmentId;         
             try
             {
-                if (net_manager.CreateSegment(out segmentId, ref rand, ni, startNode, endNode, startDirection, endDirection, Singleton<SimulationManager>.instance.m_currentBuildIndex, Singleton<SimulationManager>.instance.m_currentBuildIndex, false))
+                if (netManager.CreateSegment(out segmentId, ref rand, ni, startNode, endNode, startDirection, endDirection, Singleton<SimulationManager>.instance.m_currentBuildIndex, Singleton<SimulationManager>.instance.m_currentBuildIndex, false))
                 {
                     Singleton<SimulationManager>.instance.m_currentBuildIndex += 2u;                    
                     if (street_name != "")
-                        net_manager.SetSegmentNameImpl(segmentId, street_name);
+                        netManager.SetSegmentNameImpl(segmentId, street_name);
 
                 }
             }
@@ -2119,11 +2110,10 @@ namespace GeoSkylines
 
         private IEnumerator AddBuilding(BuildingInfo bi, Vector3 bldPos, float angle)
         {
-            BuildingManager bm = BuildingManager.instance;
             try
             {
 
-                if (bm.CreateBuilding(out ushort bldId, ref rand, bi, bldPos, angle, bi.GetLength(), Singleton<SimulationManager>.instance.m_currentBuildIndex))
+                if (buildingManager.CreateBuilding(out ushort bldId, ref rand, bi, bldPos, angle, bi.GetLength(), Singleton<SimulationManager>.instance.m_currentBuildIndex))
                 {
                     ++Singleton<SimulationManager>.instance.m_currentBuildIndex;
                     //Debug.Log("New segment ID: " + segmentId.ToString() + " and name: " + net_manager.GetSegmentName(segmentId));
