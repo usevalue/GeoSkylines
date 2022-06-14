@@ -35,7 +35,7 @@ namespace GeoSkylines
         private string impRailsFileName = "rails_rwo.csv";
         private string railMappingFileName = "rwo_cs_rail_match.csv";
         private string impBuildingsFileName = "buildings_rwo.csv";
-        /private string buildingMatchFileName = "rwo_cs_building_match.csv";
+        //private string buildingMatchFileName = "rwo_cs_building_match.csv";
         private string impZonesFileName = "zones_rwo.csv";
         private string zoneMappingFileName = "rwo_cs_zone_match.csv";
         private string impTreesRasterFileName = "trees.png";
