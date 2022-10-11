@@ -1,7 +1,10 @@
-GeoSkylines/bin/
 GeoSkylines/burningmime.curves/
 GeoSkylines/GeoSkylines.csproj
-
-GeoSkylines.dll
+GeoSkylines/obj/
+GeoSklines/bin/Debug/Assembly*.dll
+GeoSklines/bin/Debug/ColossalManaged.dll
+GeoSklines/bin/Debug/IC*.dll
+GeoSklines/bin/Debug/Pops*.dll
+GeoSklines/bin/Debug/Unity*.dll
 .vs/
 
